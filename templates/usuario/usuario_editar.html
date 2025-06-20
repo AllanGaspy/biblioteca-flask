@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+  <h2>Editar Usuário</h2>
+  <form method="POST">
+    <div class="mb-3">
+      <label class="form-label">Nome *</label>
+      <input type="text" name="nome" class="form-control" value="{{ usuario.nome }}" required>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Email *</label>
+      <input type="email" name="email" class="form-control" value="{{ usuario.email }}" required>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Telefone</label>
+      <input type="text" name="telefone" class="form-control" value="{{ usuario.telefone or '' }}">
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Perfil *</label>
+      <select name="perfil" class="form-select" required>
+        <option value="aluno" {% if usuario.perfil == 'aluno' %}selected{% endif %}>Aluno</option>
+        <option value="professor" {% if usuario.perfil == 'professor' %}selected{% endif %}>Professor</option>
+        <option value="funcionario" {% if usuario.perfil == 'funcionario' %}selected{% endif %}>Funcionário</option>
+      </select>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Salvar</button>
+    <a href="{{ url_for('usuario.listar') }}" class="btn btn-secondary">Cancelar</a>
+  </form>
+</div>
+{% endblock %}

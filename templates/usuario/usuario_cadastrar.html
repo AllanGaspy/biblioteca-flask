@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+  <h2>Cadastrar Novo Usuário</h2>
+  <form method="POST">
+    <div class="mb-3">
+      <label class="form-label">Nome *</label>
+      <input type="text" name="nome" class="form-control" required value="{{ request.form.nome or '' }}">
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Email *</label>
+      <input type="email" name="email" class="form-control" required value="{{ request.form.email or '' }}">
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Telefone</label>
+      <input type="text" name="telefone" class="form-control" placeholder="(opcional)" value="{{ request.form.telefone or '' }}">
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Perfil *</label>
+      <select name="perfil" class="form-select" required>
+        <option value="">-- Selecione --</option>
+        <option value="aluno" {% if request.form.perfil == 'aluno' %}selected{% endif %}>Aluno</option>
+        <option value="professor" {% if request.form.perfil == 'professor' %}selected{% endif %}>Professor</option>
+        <option value="funcionario" {% if request.form.perfil == 'funcionario' %}selected{% endif %}>Funcionário</option>
+      </select>
+    </div>
+
+    <button type="submit" class="btn btn-success">Salvar</button>
+    <a href="{{ url_for('usuario.listar') }}" class="btn btn-secondary">Cancelar</a>
+  </form>
+</div>
+{% endblock %}

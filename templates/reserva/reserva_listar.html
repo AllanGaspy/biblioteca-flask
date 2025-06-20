@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-5">
+    <a href="{{ url_for('funcionario.dashboard') }}" class="btn btn-secondary ms-2">Voltar ao Painel</a>
+    <br><br>
+    <h2>📌 Lista de Reservas</h2>
+
+    <form method="get" class="mb-3 row g-2">
+        <div class="col-auto">
+            <input type="text" name="nome" class="form-control" placeholder="Nome do Usuário" value="{{ filtro_nome }}">
+        </div>
+        <div class="col-auto">
+            <input type="text" name="livro" class="form-control" placeholder="Título do Livro" value="{{ filtro_livro }}">
+        </div>
+        <div class="col-auto">
+            <button type="submit" class="btn btn-primary">🔍 Filtrar</button>
+            <a href="{{ url_for('reserva.listar') }}" class="btn btn-secondary me-2">❌ Limpar</a>
+        </div>
+        <div class="col-auto">
+            <a href="{{ url_for('reserva.exportar_excel', nome=filtro_nome, livro=filtro_livro) }}" class="btn btn-success">⬇️ Exportar para Excel</a>
+        </div>
+    </form>
+
+    <a href="{{ url_for('reserva.cadastrar') }}" class="btn btn-success mb-3">➕ Nova Reserva</a>
+
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Data Reserva</th>
+                <th>Ordem na Fila</th>
+                <th>Usuário</th>
+                <th>Livro</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for reserva in reservas %}
+            <tr>
+                <td>{{ reserva.data_reserva.strftime('%d/%m/%Y') }}</td>
+                <td>{{ reserva.ordem_fila }}</td>
+                <td>{{ reserva.nome_usuario }}</td>
+                <td>{{ reserva.titulo_livro }}</td>
+                <td>
+                    <a href="{{ url_for('reserva.editar', id_reserva=reserva.id_reserva) }}" class="btn btn-sm btn-warning">✏️ Editar</a>
+                    <form method="POST" action="{{ url_for('reserva.deletar', id_reserva=reserva.id_reserva) }}" style="display:inline-block" onsubmit="return confirm('Confirma a exclusão da reserva?');">
+                        <button type="submit" class="btn btn-sm btn-danger">Deletar</button>
+                    </form>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="5" class="text-center">Nenhuma reserva encontrada.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

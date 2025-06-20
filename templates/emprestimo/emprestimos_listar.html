@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+  <h2>Lista de Empréstimos</h2>
+  <form method="get" class="row g-3 mb-3">
+    <div class="col-md-6">
+      <input type="text" name="filtro" class="form-control" placeholder="Filtrar por usuário, livro ou categoria" value="{{ filtro }}">
+    </div>
+    <div class="col-auto">
+      <button type="submit" class="btn btn-primary">Filtrar</button>
+    </div>
+    <div class="col-auto">
+      <a href="{{ url_for('emprestimo.cadastrar') }}" class="btn btn-success">➕ Novo Empréstimo</a>
+    </div>
+    <div class="col-auto"> 
+      <a href="{{ url_for('funcionario.dashboard') }}" class="btn btn-secondary ms-2">Voltar ao Painel</a>
+    </div>
+    <div class="col-auto">
+      <a href="{{ url_for('emprestimo.exportar_excel') }}" class="btn btn-success">⬇️ Exportar para Excel</a>
+    </div>
+  </form>
+
+  <table class="table table-bordered">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Usuário</th>
+        <th>Perfil</th>
+        <th>Livro</th>
+        <th>Categoria</th>
+        <th>Retirada</th>
+        <th>Prev. Devolução</th>
+        <th>Real Devolução</th>
+        <th>Ações</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for e in emprestimos %}
+      <tr>
+        <td>{{ e.id_emprestimo }}</td>
+        <td>{{ e.nome_usuario }}</td>
+        <td>{{ e.perfil_usuario|capitalize }}</td>
+        <td>{{ e.titulo_livro }}</td>
+        <td>{{ e.categoria or '-' }}</td>
+        <td>{{ e.data_retirada }}</td>
+        <td>{{ e.data_prevista_devolucao }}</td>
+        <td>{{ e.data_real_devolucao or '-' }}</td>
+        <td>
+          <a href="{{ url_for('emprestimo.editar', id=e.id_emprestimo) }}" class="btn btn-sm btn-warning">✏️ Editar</a>
+          <form action="{{ url_for('emprestimo.deletar', id=e.id_emprestimo) }}" method="POST" style="display:inline-block;">
+            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Tem certeza que deseja deletar?')">Deletar</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

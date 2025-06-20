@@ -1,0 +1,104 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<div class="container mt-5">
+  <h2>Editar Livro</h2>
+
+  <form method="POST" id="form-editar-livro">
+    <div class="mb-3">
+      <label class="form-label">Título *</label>
+      <input type="text" class="form-control" name="titulo" value="{{ livro.titulo }}" required>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Subtítulo</label>
+      <input type="text" class="form-control" name="subtitulo" value="{{ livro.subtitulo }}">
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Ano de Publicação *</label>
+      <input type="number" min="0" max="{{ current_year }}" class="form-control" name="ano_publicacao" value="{{ livro.ano_publicacao }}" required>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Idioma *</label>
+      <input type="text" class="form-control" name="idioma" value="{{ livro.idioma }}" required>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Resumo</label>
+      <textarea class="form-control" name="resumo">{{ livro.resumo }}</textarea>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Número de Cópias Disponíveis *</label>
+      <input type="number" min="0" class="form-control" name="num_copias_disponiveis" value="{{ livro.num_copias_disponiveis }}" required>
+    </div>
+
+    <!-- Categoria com datalist -->
+    <div class="mb-3">
+      <label class="form-label">Categoria *</label>
+      <input list="listaCategorias" id="categoria_input" name="categoria_nome" class="form-control" placeholder="Digite a categoria" value="{{ livro.nome_categoria }}" required autocomplete="off">
+      <datalist id="listaCategorias">
+        {% for c in categorias %}
+        <option data-id="{{ c.id_categoria }}" value="{{ c.nome }}"></option>
+        {% endfor %}
+      </datalist>
+      <input type="hidden" name="categoria" id="id_categoria" value="{{ livro.fk_Categoria_id_categoria }}">
+      <small class="form-text text-muted">Ou preencha para criar nova categoria:</small>
+      <input type="text" class="form-control mt-1" name="nova_categoria" placeholder="Nova categoria">
+    </div>
+
+    <!-- Editora com datalist -->
+    <div class="mb-3">
+      <label class="form-label">Editora *</label>
+      <input list="listaEditoras" id="editora_input" name="editora_nome" class="form-control" placeholder="Digite a editora" value="{{ livro.nome_editora }}" required autocomplete="off">
+      <datalist id="listaEditoras">
+        {% for e in editoras %}
+        <option data-id="{{ e.id_editora }}" value="{{ e.nome }}"></option>
+        {% endfor %}
+      </datalist>
+      <input type="hidden" name="editora" id="id_editora" value="{{ livro.fk_Editora_id_editora }}">
+
+      <small class="form-text text-muted mt-1">Ou preencha os dados para nova editora:</small>
+      <input type="text" class="form-control mt-1" name="nova_editora_nome" placeholder="Nome da nova editora">
+      <input type="text" class="form-control mt-1" name="nova_editora_cidade" placeholder="Cidade da nova editora">
+
+      <input list="paises-list" name="nova_editora_pais" class="form-control" placeholder="Digite ou selecione o país" value="{{ request.form.get('nova_editora_pais', '') }}">
+      <datalist id="paises-list">
+        {% for pais in paises %}
+        <option value="{{ pais }}">
+        {% endfor %}
+      </datalist>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+    <a href="{{ url_for('livros.listar') }}" class="btn btn-secondary ms-2">Cancelar</a>
+  </form>
+</div>
+
+<!-- Script para atualizar os campos ocultos -->
+<script>
+  function updateHiddenField(inputId, datalistId, hiddenInputId) {
+    const input = document.getElementById(inputId);
+    const datalist = document.getElementById(datalistId);
+    const hiddenInput = document.getElementById(hiddenInputId);
+
+    input.addEventListener('input', function () {
+      const val = this.value;
+      const option = Array.from(datalist.options).find(opt => opt.value === val);
+      if (option) {
+        hiddenInput.value = option.dataset.id;
+      } else {
+        hiddenInput.value = '';
+      }
+    });
+  }
+
+  updateHiddenField('categoria_input', 'listaCategorias', 'id_categoria');
+  updateHiddenField('editora_input', 'listaEditoras', 'id_editora');
+</script>
+{% endblock %}

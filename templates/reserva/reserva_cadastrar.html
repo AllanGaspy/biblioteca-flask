@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-5">
+    <a href="{{ url_for('reserva.listar') }}" class="btn btn-secondary ms-2 mb-3">Voltar à Lista de Reservas</a>
+    <h2>➕ Nova Reserva</h2>
+
+    <!-- Flash messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ 'danger' if category == 'danger' else 'success' }}">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <form method="POST" id="form-cadastrar-reserva" class="row g-3">
+        <!-- Campo Usuário com datalist -->
+        <div class="col-md-5">
+            <label for="usuario_input" class="form-label">Usuário</label>
+            <input list="listaUsuarios" id="usuario_input" class="form-control" placeholder="Digite o nome do usuário" required>
+            <datalist id="listaUsuarios">
+                {% for u in usuarios %}
+                <option data-id="{{ u.id_usuario }}" value="{{ u.nome }}"></option>
+                {% endfor %}
+            </datalist>
+            <input type="hidden" name="usuario" id="id_usuario">
+        </div>
+
+        <!-- Campo Livro com datalist -->
+        <div class="col-md-5">
+            <label for="livro_input" class="form-label">Livro</label>
+            <input list="listaLivros" id="livro_input" class="form-control" placeholder="Digite o título do livro" required>
+            <datalist id="listaLivros">
+                {% for l in livros %}
+                <option data-id="{{ l.id_livro }}" value="{{ l.titulo }}"></option>
+                {% endfor %}
+            </datalist>
+            <input type="hidden" name="livro" id="id_livro">
+        </div>
+
+        <!-- Mensagem dinâmica sobre fila -->
+        <div class="col-md-12">
+            <div id="mensagem_fila" class="form-text text-muted fst-italic"></div>
+        </div>
+
+        <div class="col-12 mt-3">
+            <button type="submit" class="btn btn-primary">Salvar Reserva</button>
+        </div>
+    </form>
+</div>
+
+<script>
+  // Preencher campo oculto com ID do usuário
+  document.getElementById('usuario_input').addEventListener('input', function () {
+    const val = this.value;
+    const opt = [...document.getElementById('listaUsuarios').options].find(o => o.value === val);
+    document.getElementById('id_usuario').value = opt ? opt.dataset.id : '';
+  });
+
+  // Preencher campo oculto com ID do livro e atualizar mensagem da fila
+  document.getElementById('livro_input').addEventListener('input', function () {
+    const val = this.value;
+    const opt = [...document.getElementById('listaLivros').options].find(o => o.value === val);
+    const livroId = opt ? opt.dataset.id : '';
+    document.getElementById('id_livro').value = livroId;
+
+    const msgFila = document.getElementById('mensagem_fila');
+
+    if (livroId) {
+      fetch(`/reserva/fila/${livroId}`)
+        .then(resp => resp.json())
+        .then(data => {
+          const qtd = data.quantidade;
+          if (qtd === 0) {
+            msgFila.textContent = '📚 Você será o primeiro da fila.';
+          } else {
+            msgFila.textContent = `📚 Há ${qtd} pessoa${qtd > 1 ? 's' : ''} na sua frente.`;
+          }
+        });
+    } else {
+      msgFila.textContent = '';
+    }
+  });
+  document.getElementById('form-cadastrar-reserva').addEventListener('submit', function (e) {
+  const idUsuario = document.getElementById('id_usuario').value;
+  const idLivro = document.getElementById('id_livro').value;
+
+  if (!idUsuario || !idLivro) {
+    e.preventDefault(); // Impede o envio
+    const alertaExistente = document.querySelector('.alert.alert-danger');
+
+    if (!alertaExistente) {
+      const div = document.createElement('div');
+      div.className = 'alert alert-danger mt-3';
+      div.innerText = 'Selecione o usuário e o livro.';
+      document.querySelector('.container form').prepend(div);
+    }
+  }
+});
+
+</script>
+{% endblock %}

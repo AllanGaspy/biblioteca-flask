@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <a href="{{ url_for('funcionario.dashboard') }}" class="btn btn-secondary ms-2">Voltar ao Painel</a>
+    <br><br>
+    <h2>📚 Lista de Livros</h2>
+
+    <form method="get" class="mb-3 row g-2">
+        <div class="col-auto">
+            <input type="text" name="titulo" class="form-control" placeholder="Título" value="{{ filtro_titulo }}">
+        </div>
+        <div class="col-auto">
+            <input type="text" name="categoria" class="form-control" placeholder="Categoria" value="{{ filtro_categoria }}">
+        </div>
+        <div class="col-auto">
+            <input type="text" name="editora" class="form-control" placeholder="Editora" value="{{ filtro_editora }}">
+        </div>
+        <div class="col-auto">
+            <button type="submit" class="btn btn-primary">Filtrar</button>
+        </div>
+        <div class="col-auto">
+            <a href="{{ url_for('livros.exportar_excel', titulo=filtro_titulo, categoria=filtro_categoria, editora=filtro_editora) }}" class="btn btn-success">⬇️ Exportar para Excel</a>
+        </div>
+    </form>
+
+    <a href="{{ url_for('livros.cadastrar') }}" class="btn btn-success mb-3">➕ Novo Livro</a>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Título</th>
+                <th>Categoria</th>
+                <th>Editora</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for livro in livros %}
+            <tr>
+                <td>{{ livro.titulo }}</td>
+                <td>{{ livro.categoria }}</td>
+                <td>{{ livro.editora }}</td>
+                <td>
+                    <a href="{{ url_for('livros.editar', id_livro=livro.id_livro) }}" class="btn btn-sm btn-warning">✏️ Editar</a>
+                    <form method="POST" action="{{ url_for('livros.deletar', id_livro=livro.id_livro) }}" style="display:inline-block" onsubmit="return confirm('Tem certeza que deseja deletar este livro?');">
+                        <button type="submit" class="btn btn-sm btn-danger">Deletar</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

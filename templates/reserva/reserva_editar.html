@@ -1,0 +1,87 @@
+{% extends 'base.html' %} 
+{% block content %}
+<div class="container mt-5">
+    <a href="{{ url_for('reserva.listar') }}" class="btn btn-secondary ms-2 mb-3">Voltar à Lista de Reservas</a>
+    <h2>✏️ Editar Reserva</h2>
+
+    <form method="POST" id="form-editar-reserva" class="row g-3">
+        <div class="col-md-3">
+            <label for="data_reserva" class="form-label">Data da Reserva</label>
+            <input type="date" id="data_reserva" name="data_reserva" class="form-control" required
+                   value="{{ reserva.data_reserva }}">
+        </div>
+
+        <div class="col-md-2">
+            <label for="ordem_fila" class="form-label">Ordem na Fila</label>
+            <input type="number" id="ordem_fila" name="ordem_fila" class="form-control" min="1" required readonly
+                   value="{{ reserva.ordem_fila }}">
+        </div>
+
+        <!-- Usuário com datalist -->
+        <div class="col-md-3">
+            <label for="usuario_input" class="form-label">Usuário</label>
+            <input list="listaUsuarios" id="usuario_input" name="usuario_input" class="form-control" placeholder="Digite o nome" value="{{ reserva.nome_usuario }}" autocomplete="off" required>
+            <datalist id="listaUsuarios">
+                {% for user in usuarios %}
+                <option data-id="{{ user.id_usuario }}" value="{{ user.nome }}"></option>
+                {% endfor %}
+            </datalist>
+            <input type="hidden" name="usuario" id="id_usuario" value="{{ reserva.fk_Usuario_id_usuario }}">
+        </div>
+
+        <!-- Livro com datalist -->
+        <div class="col-md-3">
+            <label for="livro_input" class="form-label">Livro</label>
+            <input list="listaLivros" id="livro_input" name="livro_input" class="form-control" placeholder="Digite o título" value="{{ reserva.titulo_livro }}" autocomplete="off" required>
+            <datalist id="listaLivros">
+                {% for livro in livros %}
+                <option data-id="{{ livro.id_livro }}" value="{{ livro.titulo }}"></option>
+                {% endfor %}
+            </datalist>
+            <input type="hidden" name="livro" id="id_livro" value="{{ reserva.fk_Livro_id_livro }}">
+        </div>
+
+        <div class="col-12 mt-3">
+            <button type="submit" class="btn btn-primary">Atualizar Reserva</button>
+        </div>
+    </form>
+</div>
+
+<script>
+  // Função para atualizar ordem da fila baseado no id do livro
+  function atualizarOrdemFila(idLivro) {
+    if (idLivro) {
+      fetch(`/reserva/fila/${idLivro}`)
+        .then(res => res.json())
+        .then(data => {
+          const posicao = data.quantidade + 1;
+          document.getElementById('ordem_fila').value = posicao;
+        });
+    } else {
+      document.getElementById('ordem_fila').value = '';
+    }
+  }
+
+  // Preencher o campo oculto com o ID do usuário
+  document.getElementById('usuario_input').addEventListener('input', function () {
+    const val = this.value;
+    const opt = [...document.getElementById('listaUsuarios').options].find(o => o.value === val);
+    document.getElementById('id_usuario').value = opt ? opt.dataset.id : '';
+  });
+
+  // Preencher o campo oculto com o ID do livro e atualizar a fila
+  document.getElementById('livro_input').addEventListener('input', function () {
+    const val = this.value;
+    const opt = [...document.getElementById('listaLivros').options].find(o => o.value === val);
+    const idLivro = opt ? opt.dataset.id : '';
+    document.getElementById('id_livro').value = idLivro;
+    atualizarOrdemFila(idLivro);
+  });
+
+  // Atualizar a ordem da fila ao carregar a página com o livro atual
+  document.addEventListener('DOMContentLoaded', function () {
+    const idLivroInicial = document.getElementById('id_livro').value;
+    atualizarOrdemFila(idLivroInicial);
+  });
+</script>
+{% endblock %}
