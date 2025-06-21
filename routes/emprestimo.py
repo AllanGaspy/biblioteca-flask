@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, send_file
+from flask import Blueprint, render_template, request, redirect, url_for, flash, send_file, jsonify
 import db
 from datetime import date, datetime
 from routes.auth import login_required
@@ -80,7 +80,7 @@ def cadastrar():
     cursor.execute("SELECT id_usuario, nome FROM Usuario")
     usuarios = cursor.fetchall()
 
-    cursor.execute("SELECT id_livro, titulo FROM Livro")
+    cursor.execute("SELECT id_livro, titulo, num_copias_disponiveis FROM Livro")
     livros = cursor.fetchall()
 
     if request.method == 'POST':
@@ -105,13 +105,29 @@ def cadastrar():
         elif dt_prevista < dt_retirada:
             flash("A data prevista de devolução não pode ser menor que a data de retirada.", "danger")
         else:
-            cursor.execute("""
-                INSERT INTO Emprestimo (data_retirada, data_prevista_devolucao, fk_Usuario_id_usuario, fk_Livro_id_livro)
-                VALUES (%s, %s, %s, %s)
-            """, (dt_retirada, dt_prevista, id_usuario, id_livro))
-            conn.commit()
-            flash("Empréstimo cadastrado com sucesso!", "success")
-            return redirect(url_for('emprestimo.listar'))
+            # Busca o número atual de cópias disponíveis
+            cursor.execute("SELECT num_copias_disponiveis FROM Livro WHERE id_livro = %s", (id_livro,))
+            livro = cursor.fetchone()
+            if not livro or livro['num_copias_disponiveis'] <= 0:
+                flash("Este livro não possui cópias disponíveis para empréstimo.", "danger")
+            else:
+                # Insere o empréstimo
+                cursor.execute("""
+                    INSERT INTO Emprestimo (data_retirada, data_prevista_devolucao, fk_Usuario_id_usuario, fk_Livro_id_livro)
+                    VALUES (%s, %s, %s, %s)
+                """, (dt_retirada, dt_prevista, id_usuario, id_livro))
+                
+                # Atualiza as cópias disponíveis decrementando 1, mas não permitindo negativo
+                novo_num_copias = livro['num_copias_disponiveis'] - 1
+                if novo_num_copias < 0:
+                    novo_num_copias = 0
+                cursor.execute("""
+                    UPDATE Livro SET num_copias_disponiveis = %s WHERE id_livro = %s
+                """, (novo_num_copias, id_livro))
+
+                conn.commit()
+                flash("Empréstimo cadastrado com sucesso!", "success")
+                return redirect(url_for('emprestimo.listar'))
 
     cursor.close()
     conn.close()
@@ -197,3 +213,14 @@ def deletar(id):
     conn.close()
     flash("Empréstimo deletado com sucesso!", "success")
     return redirect(url_for('emprestimo.listar'))
+
+@emprestimo_bp.route('/verificar-copias/<int:id_livro>')
+@login_required(perfis=['funcionario'])
+def verificar_copias(id_livro):
+    conn = db.get_connection()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("SELECT num_copias_disponiveis AS copias FROM Livro WHERE id_livro = %s", (id_livro,))
+    dados = cursor.fetchone()
+    cursor.close()
+    conn.close()
+    return jsonify({'num_copias_disponiveis': dados['copias'] if dados else 0})
