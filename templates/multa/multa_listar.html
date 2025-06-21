@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+{% extends 'base.html' %} 
 {% block content %}
 <div class="container mt-5">
     <a href="{{ url_for('funcionario.dashboard') }}" class="btn btn-secondary ms-2">Voltar ao Painel</a>
@@ -7,15 +7,15 @@
 
     <!-- Botões e Filtros -->
     <form method="GET" class="row g-3 mb-3">
-        <div class="col-md-4">
+        <div class="col-md-3">
             <input type="text" class="form-control" name="nome" placeholder="Filtrar por nome do usuário"
-                value="{{ filtro_usuario }}">
+                value="{{ filtro_nome }}">
         </div>
-        <div class="col-md-4">
+        <div class="col-md-3">
             <input type="text" class="form-control" name="livro" placeholder="Filtrar por título do livro"
                 value="{{ filtro_livro }}">
         </div>
-        <div class="col-md-4 d-flex">
+        <div class="col-md-6 d-flex">
             <button type="submit" class="btn btn-primary me-2">🔍 Buscar</button>
             <a href="{{ url_for('multa.listar') }}" class="btn btn-secondary me-2">❌ Limpar</a>
             <a href="{{ url_for('multa.gerar_multas') }}" class="btn btn-warning me-2">Gerar Multas</a>
@@ -23,16 +23,19 @@
         </div>
     </form>
 
-    <!-- Mensagens -->
+    <!-- Mensagens Flash
     {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-    {% for category, message in messages %}
-    <div class="alert alert-{{ 'danger' if category == 'danger' else 'success' }}">{{ message }}</div>
-    {% endfor %}
-    {% endif %}
-    {% endwith %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %} -->
 
-    <!-- Tabela -->
+    <!-- Tabela de Multas -->
     <table class="table table-bordered">
         <thead>
             <tr>
@@ -43,8 +46,8 @@
                 <th>Dias de Atraso</th>
                 <th>Devolução Prevista</th>
                 <th>Devolução Real</th>
-                <th>Quitada</th> 
-                <th>Ações</th>
+                <th>Quitada</th>
+                <th>Ações <span title="Quitar = marcar devolução caso ainda não tenha ocorrido">ℹ️</span></th>
             </tr>
         </thead>
         <tbody>
@@ -57,15 +60,16 @@
                 <td>{{ multa.dias_atraso }}</td>
                 <td>{{ multa.data_prevista_devolucao }}</td>
                 <td>{{ multa.data_real_devolucao or '—' }}</td>
-                <td>{% if multa.quitada %}✅{% else %}❌{% endif %}</td> 
+                <td>{% if multa.quitada %}✅{% else %}❌{% endif %}</td>
                 <td>
-                    <a href="{{ url_for('multa.editar', id_multa=multa.id_multa) }}" class="btn btn-sm btn-warning">✏️
-                        Editar</a>
-                    <form action="{{ url_for('multa.quitar', id_multa=multa.id_multa) }}" method="POST"
-                        style="display:inline-block">
-                        <button type="submit" class="btn btn-sm btn-danger"
-                            onclick="return confirm('Deseja quitar esta multa?')">Quitar</button>
+                    <a href="{{ url_for('multa.editar', id_multa=multa.id_multa) }}" class="btn btn-sm btn-warning">✏️ Editar</a>
+                    {% if not multa.quitada %}
+                    <form action="{{ url_for('multa.quitar', id_multa=multa.id_multa) }}" method="POST" style="display:inline-block">
+                        <button type="submit" class="btn btn-sm btn-danger" title="Quitar multa e marcar devolução, se necessário" onclick="return confirm('Deseja quitar esta multa?')">
+                            Quitar
+                        </button>
                     </form>
+                    {% endif %}
                 </td>
             </tr>
             {% endfor %}

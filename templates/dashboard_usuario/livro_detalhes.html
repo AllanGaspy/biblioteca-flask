@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+  <a href="{{ url_for('usuario.livros_disponiveis') }}" class="btn btn-secondary mb-3">⬅️ Voltar</a>
+
+  <h2>{{ livro.titulo }}</h2>
+  {% if livro.subtitulo %}
+    <h5 class="text-muted">{{ livro.subtitulo }}</h5>
+  {% endif %}
+
+  <p><strong>Categoria:</strong> {{ livro.categoria }}</p>
+  <p><strong>Editora:</strong> {{ livro.editora }}</p>
+  <p><strong>Ano de Publicação:</strong> {{ livro.ano_publicacao }}</p>
+  <p><strong>Idioma:</strong> {{ livro.idioma }}</p>
+  <p><strong>Resumo:</strong> {{ livro.resumo if livro.resumo else 'Não informado.' }}</p>
+  <p><strong>Cópias disponíveis:</strong> {{ livro.num_copias_disponiveis }}</p>
+
+  {% if pode_reservar %}
+    <form method="POST" action="{{ url_for('usuario.reservar_livro', id_livro=livro.id_livro) }}">
+      <button type="submit" class="btn btn-primary" {% if livro.num_copias_disponiveis == 0 %}disabled{% endif %}>
+        📌 Reservar
+      </button>
+    </form>
+  {% else %}
+    <button class="btn btn-secondary" disabled>
+      Você não pode reservar este livro (empréstimo ou reserva ativa)
+    </button>
+  {% endif %}
+  
+</div>
+{% endblock %}

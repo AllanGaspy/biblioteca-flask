@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+    <!-- Botão de logout alinhado à direita -->
+    <div class="d-flex justify-content-end mb-2">
+        <form action="{{ url_for('auth.logout') }}" method="POST">
+            <button type="submit" class="btn btn-outline-danger btn-sm">Sair</button>
+        </form>
+    </div>
+    <h1>Olá, {{ nome }}!</h1>
+    <p>Bem-vindo à sua dashboard.</p>
+
+    <div class="list-group mt-4" style="max-width: 300px;">
+        <a href="{{ url_for('usuario.livros_disponiveis') }}" class="list-group-item list-group-item-action">📚 Livros
+            Disponíveis</a>
+        <a href="{{ url_for('usuario.minhas_reservas') }}" class="list-group-item list-group-item-action">📝 Minhas
+            Reservas</a>
+        <a href="{{ url_for('usuario.meus_emprestimos') }}" class="list-group-item list-group-item-action">📖 Meus
+            Empréstimos</a>
+        <a href="{{ url_for('usuario.minhas_multas') }}" class="list-group-item list-group-item-action">⚠️ Minhas
+            Multas</a>
+    </div>
+</div>
+{% endblock %}

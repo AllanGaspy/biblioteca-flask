@@ -1,59 +1,100 @@
 {% extends 'base.html' %}
 {% block content %}
-<div class="container mt-4">
+<div class="container mt-5">
+
+  <a href="{{ url_for('funcionario.dashboard') }}" class="btn btn-secondary ms-2 mb-3">Voltar ao Painel</a>
+
   <h2>Lista de Empréstimos</h2>
-  <form method="get" class="row g-3 mb-3">
-    <div class="col-md-6">
-      <input type="text" name="filtro" class="form-control" placeholder="Filtrar por usuário, livro ou categoria" value="{{ filtro }}">
+
+  <!-- Formulário de filtros -->
+  <form method="GET" class="row g-3 mb-3 align-items-center" role="search" aria-label="Filtros de empréstimos">
+
+    <div class="col-md-2">
+      <input
+        type="search"
+        name="filtro_usuario"
+        class="form-control"
+        placeholder="Filtrar por usuário"
+        value="{{ filtro_usuario or '' }}"
+        aria-label="Filtrar por usuário"
+        autocomplete="off"
+      >
     </div>
-    <div class="col-auto">
-      <button type="submit" class="btn btn-primary">Filtrar</button>
+
+    <div class="col-md-2">
+      <input
+        type="search"
+        name="filtro_livro"
+        class="form-control"
+        placeholder="Filtrar por livro"
+        value="{{ filtro_livro or '' }}"
+        aria-label="Filtrar por livro"
+        autocomplete="off"
+      >
     </div>
-    <div class="col-auto">
-      <a href="{{ url_for('emprestimo.cadastrar') }}" class="btn btn-success">➕ Novo Empréstimo</a>
+
+    <div class="col-md-2">
+      <input
+        type="search"
+        name="filtro_categoria"
+        class="form-control"
+        placeholder="Filtrar por categoria"
+        value="{{ filtro_categoria or '' }}"
+        aria-label="Filtrar por categoria"
+        autocomplete="off"
+      >
     </div>
-    <div class="col-auto"> 
-      <a href="{{ url_for('funcionario.dashboard') }}" class="btn btn-secondary ms-2">Voltar ao Painel</a>
-    </div>
-    <div class="col-auto">
+
+    <div class="col-md-6 d-flex flex-wrap gap-2">
+      <button type="submit" class="btn btn-primary me-2">🔍 Buscar</button>
+      <a href="{{ url_for('emprestimo.listar') }}" class="btn btn-secondary me-2">❌ Limpar</a>
+      <a href="{{ url_for('emprestimo.cadastrar') }}" class="btn btn-success me-2">➕ Novo Empréstimo</a>
       <a href="{{ url_for('emprestimo.exportar_excel') }}" class="btn btn-success">⬇️ Exportar para Excel</a>
     </div>
+
   </form>
 
-  <table class="table table-bordered">
-    <thead>
-      <tr>
-        <th>ID</th>
-        <th>Usuário</th>
-        <th>Perfil</th>
-        <th>Livro</th>
-        <th>Categoria</th>
-        <th>Retirada</th>
-        <th>Prev. Devolução</th>
-        <th>Real Devolução</th>
-        <th>Ações</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for e in emprestimos %}
-      <tr>
-        <td>{{ e.id_emprestimo }}</td>
-        <td>{{ e.nome_usuario }}</td>
-        <td>{{ e.perfil_usuario|capitalize }}</td>
-        <td>{{ e.titulo_livro }}</td>
-        <td>{{ e.categoria or '-' }}</td>
-        <td>{{ e.data_retirada }}</td>
-        <td>{{ e.data_prevista_devolucao }}</td>
-        <td>{{ e.data_real_devolucao or '-' }}</td>
-        <td>
-          <a href="{{ url_for('emprestimo.editar', id=e.id_emprestimo) }}" class="btn btn-sm btn-warning">✏️ Editar</a>
-          <form action="{{ url_for('emprestimo.deletar', id=e.id_emprestimo) }}" method="POST" style="display:inline-block;">
-            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Tem certeza que deseja deletar?')">Deletar</button>
-          </form>
-        </td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+  <div class="table-responsive">
+    <table class="table table-bordered table-hover align-middle">
+      <thead class="table-light">
+        <tr>
+          <th>ID</th>
+          <th>Usuário</th>
+          <th>Perfil</th>
+          <th>Livro</th>
+          <th>Categoria</th>
+          <th>Retirada</th>
+          <th>Prev. Devolução</th>
+          <th>Real Devolução</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for e in emprestimos %}
+        <tr>
+          <td>{{ e.id_emprestimo }}</td>
+          <td>{{ e.nome_usuario }}</td>
+          <td>{{ e.perfil_usuario|capitalize }}</td>
+          <td>{{ e.titulo_livro }}</td>
+          <td>{{ e.categoria or '-' }}</td>
+          <td>{{ e.data_retirada }}</td>
+          <td>{{ e.data_prevista_devolucao }}</td>
+          <td>{{ e.data_real_devolucao or '-' }}</td>
+          <td>
+            <a href="{{ url_for('emprestimo.editar', id=e.id_emprestimo) }}" class="btn btn-sm btn-warning">✏️ Editar</a>
+            <form action="{{ url_for('emprestimo.deletar', id=e.id_emprestimo) }}" method="POST" style="display:inline-block;">
+              <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Tem certeza que deseja deletar?')">Deletar</button>
+            </form>
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="9" class="text-center">Nenhum empréstimo encontrado.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
 </div>
 {% endblock %}

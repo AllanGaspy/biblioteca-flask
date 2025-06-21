@@ -4,15 +4,6 @@
     <a href="{{ url_for('reserva.listar') }}" class="btn btn-secondary ms-2 mb-3">Voltar à Lista de Reservas</a>
     <h2>➕ Nova Reserva</h2>
 
-    <!-- Flash messages -->
-    {% with messages = get_flashed_messages(with_categories=true) %}
-      {% if messages %}
-        {% for category, message in messages %}
-          <div class="alert alert-{{ 'danger' if category == 'danger' else 'success' }}">{{ message }}</div>
-        {% endfor %}
-      {% endif %}
-    {% endwith %}
-
     <form method="POST" id="form-cadastrar-reserva" class="row g-3">
         <!-- Campo Usuário com datalist -->
         <div class="col-md-5">

@@ -3,45 +3,42 @@
 <div class="container mt-4">
   <h2>Registrar Empréstimo</h2>
 
-  {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-      {% for category, message in messages %}
-        <div class="alert alert-{{ 'danger' if category == 'danger' else 'success' }}">{{ message }}</div>
-      {% endfor %}
-    {% endif %}
-  {% endwith %}
 
-  <form method="POST" id="form-cadastrar-emprestimo">
+  <form method="POST" id="form-cadastrar-emprestimo" novalidate>
     <div class="mb-3">
-      <label class="form-label">Data de Retirada</label>
-      <input type="date" name="data_retirada" id="data_retirada" class="form-control" required>
+      <label for="data_retirada" class="form-label">Data de Retirada</label>
+      <input type="date" name="data_retirada" id="data_retirada" class="form-control" required
+             value="{{ form_data.data_retirada if form_data else '' }}">
     </div>
 
     <div class="mb-3">
-      <label class="form-label">Data Prevista de Devolução</label>
-      <input type="date" name="data_prevista_devolucao" id="data_prevista" class="form-control" required>
+      <label for="data_prevista" class="form-label">Data Prevista de Devolução</label>
+      <input type="date" name="data_prevista_devolucao" id="data_prevista" class="form-control" required
+             value="{{ form_data.data_prevista_devolucao if form_data else '' }}">
     </div>
 
     <div class="mb-3">
-      <label class="form-label">Usuário</label>
-      <input list="listaUsuarios" id="usuario_input" class="form-control" placeholder="Digite o nome do usuário" required>
+      <label for="usuario_input" class="form-label">Usuário</label>
+      <input list="listaUsuarios" id="usuario_input" class="form-control" placeholder="Digite o nome do usuário" required autocomplete="off"
+             value="{{ form_data.id_usuario_nome if form_data else '' }}">
       <datalist id="listaUsuarios">
         {% for u in usuarios %}
-        <option data-id="{{ u.id_usuario }}" value="{{ u.nome }}"></option>
+          <option data-id="{{ u.id_usuario }}" value="{{ u.nome }}"></option>
         {% endfor %}
       </datalist>
-      <input type="hidden" name="id_usuario" id="id_usuario">
+      <input type="hidden" name="id_usuario" id="id_usuario" value="{{ form_data.id_usuario if form_data else '' }}">
     </div>
 
     <div class="mb-3">
-      <label class="form-label">Livro</label>
-      <input list="listaLivros" id="livro_input" class="form-control" placeholder="Digite o título do livro" required>
+      <label for="livro_input" class="form-label">Livro</label>
+      <input list="listaLivros" id="livro_input" class="form-control" placeholder="Digite o título do livro" required autocomplete="off"
+             value="{{ form_data.id_livro_nome if form_data else '' }}">
       <datalist id="listaLivros">
         {% for l in livros %}
-        <option data-id="{{ l.id_livro }}" value="{{ l.titulo }}"></option>
+          <option data-id="{{ l.id_livro }}" value="{{ l.titulo }}"></option>
         {% endfor %}
       </datalist>
-      <input type="hidden" name="id_livro" id="id_livro">
+      <input type="hidden" name="id_livro" id="id_livro" value="{{ form_data.id_livro if form_data else '' }}">
       <small id="info_copias" class="form-text text-muted mt-1">
         📚 Cópias disponíveis: <span id="copias_text">Selecione um livro</span>
       </small>
@@ -60,15 +57,18 @@
   const campoIdUsuario = document.getElementById('id_usuario');
   const campoIdLivro = document.getElementById('id_livro');
   const textoCopias = document.getElementById('copias_text');
+  const form = document.getElementById('form-cadastrar-emprestimo');
 
-  inputUsuario.addEventListener('input', function () {
-    const val = this.value;
+  // Atualiza o campo hidden do usuário ao selecionar no datalist
+  function setIdUsuario() {
+    const val = inputUsuario.value;
     const opt = [...datalistUsuarios.options].find(o => o.value === val);
     campoIdUsuario.value = opt ? opt.dataset.id : '';
-  });
+  }
 
-  inputLivro.addEventListener('input', function () {
-    const val = this.value;
+  // Atualiza o campo hidden do livro e o número de cópias disponíveis
+  function setIdLivro() {
+    const val = inputLivro.value;
     const opt = [...datalistLivros.options].find(o => o.value === val);
     const idLivro = opt ? opt.dataset.id : '';
     campoIdLivro.value = idLivro;
@@ -85,31 +85,67 @@
     } else {
       textoCopias.textContent = 'Selecione um livro';
     }
+  }
+
+  inputUsuario.addEventListener('input', setIdUsuario);
+  inputLivro.addEventListener('input', setIdLivro);
+
+  // Atualiza o número de cópias ao carregar a página se já houver um livro selecionado
+  window.addEventListener('DOMContentLoaded', () => {
+    if (campoIdLivro.value) {
+      fetch(`/emprestimos/verificar-copias/${campoIdLivro.value}`)
+        .then(res => res.json())
+        .then(data => {
+          textoCopias.textContent = data.num_copias_disponiveis;
+        })
+        .catch(() => {
+          textoCopias.textContent = 'Erro ao verificar';
+        });
+    }
   });
 
-  document.getElementById('form-cadastrar-emprestimo').addEventListener('submit', function (e) {
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+
     const dataRetirada = new Date(document.getElementById('data_retirada').value);
     const dataPrevista = new Date(document.getElementById('data_prevista').value);
     const hoje = new Date();
-    hoje.setHours(0, 0, 0, 0);
+    hoje.setHours(0,0,0,0);
 
     if (dataRetirada > hoje) {
       alert("A data de retirada não pode ser maior que hoje.");
-      e.preventDefault();
       return;
     }
 
     if (dataPrevista < dataRetirada) {
       alert("A data prevista de devolução não pode ser menor que a data de retirada.");
-      e.preventDefault();
       return;
     }
 
     const copiasDisponiveis = parseInt(textoCopias.textContent);
     if (isNaN(copiasDisponiveis) || copiasDisponiveis <= 0) {
       alert("Não é possível realizar empréstimo: sem cópias disponíveis do livro.");
-      e.preventDefault();
+      return;
     }
+
+    if (!campoIdUsuario.value) {
+      alert("Selecione um usuário válido.");
+      return;
+    }
+
+    // Verifica multas do usuário via AJAX antes de enviar
+    fetch(`/usuario/verificar-multas/${campoIdUsuario.value}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.tem_multas) {
+          alert("Este usuário possui multas não quitadas e não pode fazer novos empréstimos.");
+        } else {
+          form.submit();
+        }
+      })
+      .catch(() => {
+        alert("Erro ao verificar multas do usuário.");
+      });
   });
 </script>
 {% endblock %}

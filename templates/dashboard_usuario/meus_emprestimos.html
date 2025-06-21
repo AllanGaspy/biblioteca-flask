@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+    <a href="{{ url_for('usuario.dashboard') }}" class="btn btn-secondary mt-3">Voltar</a>
+    <h2>Meus Empréstimos</h2>
+
+    <!-- Formulário de filtros -->
+    <form method="GET" class="row g-3 mb-3 align-items-center">
+
+        <div class="col-md-3">
+            <input type="text" name="titulo" class="form-control" placeholder="Filtrar por livro"
+                value="{{ filtro_titulo or '' }}">
+        </div>
+
+        <div class="col-md-3">
+            <input type="text" name="categoria" class="form-control" placeholder="Filtrar por categoria"
+                value="{{ filtro_categoria or '' }}">
+        </div>
+
+        <div class="col-md-3">
+            <select name="status" class="form-select">
+                <option value="" {% if not filtro_status %}selected{% endif %}>Todos os status</option>
+                <option value="em andamento" {% if filtro_status=='em andamento' %}selected{% endif %}>Em andamento
+                </option>
+                <option value="atrasado" {% if filtro_status=='atrasado' %}selected{% endif %}>Atrasado</option>
+                <option value="devolvido" {% if filtro_status=='devolvido' %}selected{% endif %}>Devolvido</option>
+            </select>
+        </div>
+
+        <div class="col-md-3 d-flex">
+            <button type="submit" class="btn btn-primary me-2">🔍 Buscar</button>
+            <a href="{{ url_for('usuario.meus_emprestimos') }}" class="btn btn-secondary">❌ Limpar</a>
+        </div>
+
+    </form>
+
+    {% if emprestimos %}
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Livro</th>
+                <th>Categoria</th>
+                <th>Data Retirada</th>
+                <th>Data Prevista Devolução</th>
+                <th>Data Real Devolução</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for e in emprestimos %}
+            <tr>
+                <td>{{ e.titulo }}</td>
+                <td>{{ e.categoria or '—' }}</td>
+                <td>{{ e.data_retirada.strftime('%d/%m/%Y') }}</td>
+                <td>{{ e.data_prevista_devolucao.strftime('%d/%m/%Y') }}</td>
+                <td>{{ e.data_real_devolucao.strftime('%d/%m/%Y') if e.data_real_devolucao else '—' }}</td>
+                <td>
+                    {% if e.data_real_devolucao %}
+                    Devolvido
+                    {% elif e.data_prevista_devolucao < now %} Atrasado {% else %} Em andamento {% endif %} </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p>Você não possui empréstimos para os filtros aplicados.</p>
+    {% endif %}
+</div>
+{% endblock %}

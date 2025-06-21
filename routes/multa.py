@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, send_file
+from flask import Blueprint, render_template, request, redirect, url_for, flash, send_file, session
 from routes.auth import login_required
 import db
 import pandas as pd
@@ -16,7 +16,7 @@ def listar():
     conn = db.get_connection()
     cursor = conn.cursor(dictionary=True)
 
-    # Atualiza automaticamente valor e dias de atraso das multas existentes
+    # Atualiza valor e dias de atraso das multas não quitadas
     cursor.execute("""
         SELECT m.id_multa, m.quitada, m.fk_Emprestimo_id_emprestimo,
                e.data_prevista_devolucao, e.data_real_devolucao
@@ -27,7 +27,7 @@ def listar():
 
     for multa in multas_para_atualizar:
         if multa['quitada']:
-            continue  # não atualiza se já foi quitada
+            continue
 
         devolucao_real = multa['data_real_devolucao']
         devolucao_prevista = multa['data_prevista_devolucao']
@@ -47,7 +47,9 @@ def listar():
 
     conn.commit()
 
-    # Busca as multas atualizadas
+    if session.pop('sucesso_multas', False):
+        flash("Multas geradas com sucesso!", "success")
+
     query = """
         SELECT m.id_multa, m.valor, m.dias_atraso, m.quitada,
                u.nome AS nome_usuario,
@@ -88,11 +90,13 @@ def gerar_multas():
     cursor.execute("""
         SELECT e.id_emprestimo, e.data_prevista_devolucao, e.data_real_devolucao
         FROM Emprestimo e
-        WHERE ((e.data_real_devolucao IS NULL AND e.data_prevista_devolucao < CURDATE())
-           OR (e.data_real_devolucao IS NOT NULL AND e.data_real_devolucao > e.data_prevista_devolucao))
-          AND NOT EXISTS (
-              SELECT 1 FROM Multa m WHERE m.fk_Emprestimo_id_emprestimo = e.id_emprestimo
-          )
+        WHERE (
+            (e.data_real_devolucao IS NULL AND e.data_prevista_devolucao < CURDATE())
+            OR (e.data_real_devolucao IS NOT NULL AND e.data_real_devolucao > e.data_prevista_devolucao)
+        )
+        AND NOT EXISTS (
+            SELECT 1 FROM Multa m WHERE m.fk_Emprestimo_id_emprestimo = e.id_emprestimo
+        )
     """)
     emprestimos = cursor.fetchall()
 
@@ -113,7 +117,7 @@ def gerar_multas():
     cursor.close()
     conn.close()
 
-    flash("Multas geradas com sucesso!", "success")
+    session['sucesso_multas'] = True
     return redirect(url_for('multa.listar'))
 
 @multa_bp.route('/editar/<int:id_multa>', methods=['GET', 'POST'])
@@ -136,16 +140,39 @@ def editar(id_multa):
         quitada_bool = quitada == 'sim'
 
         try:
-            cursor.execute("""
-                UPDATE Multa
-                SET quitada = %s
-                WHERE id_multa = %s
-            """, (quitada_bool, id_multa))
+            if quitada_bool:
+                # Marca a multa como quitada
+                cursor.execute("UPDATE Multa SET quitada = TRUE WHERE id_multa = %s", (id_multa,))
+
+                # Atualiza data_real_devolucao se estiver NULL e atualiza cópias do livro
+                cursor.execute("SELECT fk_Emprestimo_id_emprestimo FROM Multa WHERE id_multa = %s", (id_multa,))
+                multa_rel = cursor.fetchone()
+                if multa_rel:
+                    emprestimo_id = multa_rel['fk_Emprestimo_id_emprestimo']
+                    cursor.execute("SELECT data_real_devolucao, fk_Livro_id_livro FROM Emprestimo WHERE id_emprestimo = %s", (emprestimo_id,))
+                    emprestimo = cursor.fetchone()
+                    if emprestimo and emprestimo['data_real_devolucao'] is None:
+                        data_hoje = date.today()
+                        cursor.execute("UPDATE Emprestimo SET data_real_devolucao = %s WHERE id_emprestimo = %s", (data_hoje, emprestimo_id))
+
+                        # Atualiza o número de cópias disponíveis do livro (+1)
+                        livro_id = emprestimo['fk_Livro_id_livro']
+                        cursor.execute("SELECT num_copias_disponiveis FROM Livro WHERE id_livro = %s", (livro_id,))
+                        livro = cursor.fetchone()
+                        if livro:
+                            novo_num = livro['num_copias_disponiveis'] + 1
+                            cursor.execute("UPDATE Livro SET num_copias_disponiveis = %s WHERE id_livro = %s", (novo_num, livro_id))
+
+            else:
+                # Marca multa como não quitada
+                cursor.execute("UPDATE Multa SET quitada = FALSE WHERE id_multa = %s", (id_multa,))
+
             conn.commit()
             flash("Multa atualizada com sucesso!", "success")
             cursor.close()
             conn.close()
             return redirect(url_for('multa.listar'))
+
         except Exception as e:
             conn.rollback()
             flash(f"Erro ao atualizar multa: {str(e)}", "danger")
@@ -158,12 +185,38 @@ def editar(id_multa):
 @login_required(perfis=['funcionario'])
 def quitar(id_multa):
     conn = db.get_connection()
-    cursor = conn.cursor()
+    cursor = conn.cursor(dictionary=True)
 
     try:
+        # Marca a multa como quitada
         cursor.execute("UPDATE Multa SET quitada = TRUE WHERE id_multa = %s", (id_multa,))
+
+        # Busca o id do empréstimo relacionado à multa
+        cursor.execute("SELECT fk_Emprestimo_id_emprestimo FROM Multa WHERE id_multa = %s", (id_multa,))
+        multa = cursor.fetchone()
+
+        if multa:
+            emprestimo_id = multa['fk_Emprestimo_id_emprestimo']
+
+            # Verifica se o empréstimo já foi devolvido
+            cursor.execute("SELECT data_real_devolucao, fk_Livro_id_livro FROM Emprestimo WHERE id_emprestimo = %s", (emprestimo_id,))
+            emprestimo = cursor.fetchone()
+
+            if emprestimo and emprestimo['data_real_devolucao'] is None:
+                data_hoje = date.today()
+                cursor.execute("UPDATE Emprestimo SET data_real_devolucao = %s WHERE id_emprestimo = %s", (data_hoje, emprestimo_id))
+
+                # Atualiza o número de cópias disponíveis do livro (+1)
+                livro_id = emprestimo['fk_Livro_id_livro']
+                cursor.execute("SELECT num_copias_disponiveis FROM Livro WHERE id_livro = %s", (livro_id,))
+                livro = cursor.fetchone()
+                if livro:
+                    novo_num = livro['num_copias_disponiveis'] + 1
+                    cursor.execute("UPDATE Livro SET num_copias_disponiveis = %s WHERE id_livro = %s", (novo_num, livro_id))
+
         conn.commit()
         flash("Multa marcada como quitada com sucesso!", "success")
+
     except Exception as e:
         conn.rollback()
         flash(f"Erro ao quitar multa: {str(e)}", "danger")

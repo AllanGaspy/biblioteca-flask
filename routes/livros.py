@@ -334,7 +334,7 @@ def deletar(id_livro):
         flash("Livro deletado com sucesso!", "success")
     except Exception as e:
         conn.rollback()
-        flash(f"Erro ao deletar livro: {str(e)}", "danger")
+        flash("Este livro não pode ser deletado pois está vinculado a empréstimos ou reservas.", "danger")
     finally:
         cursor.close()
         conn.close()

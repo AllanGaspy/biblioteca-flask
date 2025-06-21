@@ -100,6 +100,30 @@ def cadastrar():
             flash("Selecione o usuário e o livro.", "danger")
         else:
             try:
+                # Verifica se usuário já tem reserva para esse livro
+                cursor.execute("""
+                    SELECT COUNT(*) AS total FROM Reserva 
+                    WHERE fk_Usuario_id_usuario = %s AND fk_Livro_id_livro = %s
+                """, (usuario_id, livro_id))
+                if cursor.fetchone()['total'] > 0:
+                    flash("Usuário já possui uma reserva para este livro.", "warning")
+                    cursor.close()
+                    conn.close()
+                    return redirect(url_for('reserva.cadastrar'))
+
+                # Verifica se usuário tem empréstimo ativo (sem data_real_devolucao) para este livro
+                cursor.execute("""
+                    SELECT COUNT(*) AS total FROM Emprestimo
+                    WHERE fk_Usuario_id_usuario = %s
+                      AND fk_Livro_id_livro = %s
+                      AND data_real_devolucao IS NULL
+                """, (usuario_id, livro_id))
+                if cursor.fetchone()['total'] > 0:
+                    flash("Usuário já possui este livro emprestado e não pode reservar.", "warning")
+                    cursor.close()
+                    conn.close()
+                    return redirect(url_for('reserva.cadastrar'))
+
                 # Data atual
                 data_reserva = datetime.date.today()
 
@@ -123,7 +147,6 @@ def cadastrar():
     cursor.close()
     conn.close()
     return render_template('reserva/reserva_cadastrar.html', usuarios=usuarios, livros=livros)
-
 
 @reserva_bp.route('/fila/<int:id_livro>')
 @login_required(perfis=['funcionario'])

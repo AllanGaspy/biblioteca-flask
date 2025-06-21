@@ -1,45 +1,47 @@
 {% extends 'base.html' %}
 {% block content %}
-<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-
 <div class="container mt-4">
   <h2>Editar Empréstimo</h2>
-  <form method="POST" id="form-editar-emprestimo">
+
+  <form method="POST" id="form-editar-emprestimo" novalidate>
     <div class="mb-3">
-      <label class="form-label">Data de Retirada</label>
+      <label for="data_retirada" class="form-label">Data de Retirada</label>
       <input type="date" name="data_retirada" id="data_retirada" class="form-control" value="{{ emprestimo.data_retirada }}" required>
     </div>
+
     <div class="mb-3">
-      <label class="form-label">Data Prevista de Devolução</label>
+      <label for="data_prevista" class="form-label">Data Prevista de Devolução</label>
       <input type="date" name="data_prevista_devolucao" id="data_prevista" class="form-control" value="{{ emprestimo.data_prevista_devolucao }}" required>
     </div>
+
     <div class="mb-3">
-      <label class="form-label">Data Real de Devolução</label>
-      <input type="date" name="data_real_devolucao" id="data_real" class="form-control" value="{{ emprestimo.data_real_devolucao }}">
+      <label for="data_real" class="form-label">Data Real de Devolução</label>
+      <input type="date" name="data_real_devolucao" id="data_real" class="form-control" value="{{ emprestimo.data_real_devolucao if emprestimo.data_real_devolucao else '' }}">
     </div>
 
-    <!-- Usuário com datalist -->
     <div class="mb-3">
-      <label class="form-label">Usuário</label>
-      <input list="listaUsuarios" id="usuario_input" class="form-control" placeholder="Digite o nome do usuário" value="{{ emprestimo.nome_usuario }}" required>
+      <label for="usuario_input" class="form-label">Usuário</label>
+      <input list="listaUsuarios" id="usuario_input" class="form-control" value="{{ emprestimo.nome_usuario }}" required autocomplete="off">
       <datalist id="listaUsuarios">
         {% for u in usuarios %}
-        <option data-id="{{ u.id_usuario }}" value="{{ u.nome }}"></option>
+          <option data-id="{{ u.id_usuario }}" value="{{ u.nome }}"></option>
         {% endfor %}
       </datalist>
       <input type="hidden" name="id_usuario" id="id_usuario" value="{{ emprestimo.fk_Usuario_id_usuario }}">
     </div>
 
-    <!-- Livro com datalist -->
     <div class="mb-3">
-      <label class="form-label">Livro</label>
-      <input list="listaLivros" id="livro_input" class="form-control" placeholder="Digite o título do livro" value="{{ emprestimo.titulo_livro }}" required>
+      <label for="livro_input" class="form-label">Livro</label>
+      <input list="listaLivros" id="livro_input" class="form-control" value="{{ emprestimo.titulo_livro }}" required autocomplete="off">
       <datalist id="listaLivros">
         {% for l in livros %}
-        <option data-id="{{ l.id_livro }}" value="{{ l.titulo }}"></option>
+          <option data-id="{{ l.id_livro }}" value="{{ l.titulo }}"></option>
         {% endfor %}
       </datalist>
       <input type="hidden" name="id_livro" id="id_livro" value="{{ emprestimo.fk_Livro_id_livro }}">
+      <small id="info_copias" class="form-text text-muted mt-1">
+        📚 Cópias disponíveis: <span id="copias_text">Selecione um livro</span>
+      </small>
     </div>
 
     <button type="submit" class="btn btn-primary">Salvar</button>
@@ -48,23 +50,44 @@
 </div>
 
 <script>
-  document.getElementById('usuario_input').addEventListener('input', function () {
-    const val = this.value;
+  const usuarioAntigoId = "{{ emprestimo.fk_Usuario_id_usuario }}";
+
+  const inputUsuario = document.getElementById('usuario_input');
+  const campoIdUsuario = document.getElementById('id_usuario');
+  const form = document.getElementById('form-editar-emprestimo');
+  const textoCopias = document.getElementById('copias_text');
+  const inputLivro = document.getElementById('livro_input');
+  const campoIdLivro = document.getElementById('id_livro');
+
+  // Atualiza o campo hidden do usuário ao digitar/select
+  inputUsuario.addEventListener('input', () => {
+    const val = inputUsuario.value;
     const opt = [...document.getElementById('listaUsuarios').options].find(o => o.value === val);
-    if (opt) {
-      document.getElementById('id_usuario').value = opt.dataset.id;
-    }
+    campoIdUsuario.value = opt ? opt.dataset.id : '';
   });
 
-  document.getElementById('livro_input').addEventListener('input', function () {
-    const val = this.value;
+  // Atualiza o campo hidden do livro e mostra cópias disponíveis
+  inputLivro.addEventListener('input', () => {
+    const val = inputLivro.value;
     const opt = [...document.getElementById('listaLivros').options].find(o => o.value === val);
-    if (opt) {
-      document.getElementById('id_livro').value = opt.dataset.id;
+    const idLivro = opt ? opt.dataset.id : '';
+    campoIdLivro.value = idLivro;
+
+    if (idLivro) {
+      fetch(`/emprestimos/verificar-copias/${idLivro}`)
+        .then(res => res.json())
+        .then(data => {
+          textoCopias.textContent = data.num_copias_disponiveis;
+        })
+        .catch(() => {
+          textoCopias.textContent = 'Erro ao verificar';
+        });
+    } else {
+      textoCopias.textContent = 'Selecione um livro';
     }
   });
 
-  document.getElementById('form-editar-emprestimo').addEventListener('submit', function (e) {
+  form.addEventListener('submit', (e) => {
     const dataRetirada = new Date(document.getElementById('data_retirada').value);
     const dataPrevista = new Date(document.getElementById('data_prevista').value);
     const dataRealInput = document.getElementById('data_real').value;
@@ -87,6 +110,48 @@
     if (dataReal && dataReal < dataRetirada) {
       alert("A data real de devolução não pode ser menor que a data de retirada.");
       e.preventDefault();
+      return;
+    }
+
+    // Validação do usuário selecionado
+    const idUsuarioAtual = campoIdUsuario.value;
+    if (!idUsuarioAtual) {
+      alert("Selecione um usuário válido.");
+      e.preventDefault();
+      return;
+    }
+
+    // Se usuário mudou, verifica multas antes de enviar
+    if (idUsuarioAtual !== usuarioAntigoId) {
+      e.preventDefault();
+      fetch(`/usuario/verificar-multas/${idUsuarioAtual}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.tem_multas) {
+            alert("Este usuário possui multas não quitadas e não pode fazer novos empréstimos.");
+          } else {
+            form.submit();
+          }
+        })
+        .catch(() => {
+          alert("Erro ao verificar multas do usuário.");
+        });
+    }
+    // Se não mudou usuário, deixa submeter (backend fará as validações finais)
+  });
+
+  // Ao carregar, atualiza cópias disponíveis do livro atual
+  window.addEventListener('DOMContentLoaded', () => {
+    const livroId = campoIdLivro.value;
+    if (livroId) {
+      fetch(`/emprestimos/verificar-copias/${livroId}`)
+        .then(res => res.json())
+        .then(data => {
+          textoCopias.textContent = data.num_copias_disponiveis;
+        })
+        .catch(() => {
+          textoCopias.textContent = 'Erro ao verificar';
+        });
     }
   });
 </script>
