@@ -1,76 +1,63 @@
 {% extends 'base.html' %}
-
 {% block content %}
 <div class="container mt-5">
-
-    <a href="{{ url_for('usuario.dashboard') }}" class="btn btn-secondary ms-2 mb-3">Voltar à Dashboard</a>
-
+    <a href="{{ url_for('usuario.dashboard') }}" class="btn btn-secondary ms-2 mb-3">Voltar</a>
     <h2>📚 Livros Disponíveis</h2>
-
     <!-- Formulário de filtros -->
     <form method="GET" class="row g-3 mb-3 align-items-center">
-
         <div class="col-md-2">
             <input type="text" name="titulo" class="form-control" placeholder="Filtrar por título"
                 value="{{ filtro_titulo or '' }}">
         </div>
-
         <div class="col-md-2">
             <input type="text" name="categoria" class="form-control" placeholder="Filtrar por categoria"
                 value="{{ filtro_categoria or '' }}">
         </div>
-
         <div class="col-md-2">
             <input type="text" name="editora" class="form-control" placeholder="Filtrar por editora"
                 value="{{ filtro_editora or '' }}">
         </div>
-
         <div class="col-md-2">
             <input type="text" name="idioma" class="form-control" placeholder="Filtrar por idioma"
                 value="{{ filtro_idioma or '' }}">
         </div>
-
-
         <div class="col-md-4 d-flex">
             <button type="submit" class="btn btn-primary me-2">🔍 Buscar</button>
             <a href="{{ url_for('usuario.livros_disponiveis') }}" class="btn btn-secondary">❌ Limpar</a>
         </div>
-
     </form>
 
     {% if livros %}
-    <table class="table table-bordered table-striped">
-        <thead>
-            <tr>
-                <th>Título</th>
-                <th>Categoria</th>
-                <th>Editora</th>
-                <th>Ano</th>
-                <th>Idioma</th>
-                <th>Cópias Disponíveis</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for livro in livros %}
-            <tr>
-                <td>
-                    <a href="{{ url_for('usuario.detalhes_livro', id_livro=livro.id_livro) }}">
-                        {{ livro.titulo }}
-                    </a>
-                </td>
-                <td>{{ livro.categoria }}</td>
-                <td>{{ livro.editora }}</td>
-                <td>{{ livro.ano_publicacao }}</td>
-                <td>{{ livro.idioma }}</td>
-                <td>{{ livro.num_copias_disponiveis }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-
-    </table>
+        <table class="table table-bordered table-striped">
+            <thead>
+                <tr>
+                    <th>Título</th>
+                    <th>Categoria</th>
+                    <th>Editora</th>
+                    <th>Ano</th>
+                    <th>Idioma</th>
+                    <th>Cópias Disponíveis</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for livro in livros %}
+                    <tr>
+                        <td>
+                            <a href="{{ url_for('usuario.detalhes_livro', id_livro=livro.id_livro) }}">
+                                {{ livro.titulo }}
+                            </a>
+                        </td>
+                        <td>{{ livro.categoria }}</td>
+                        <td>{{ livro.editora }}</td>
+                        <td>{{ livro.ano_publicacao }}</td>
+                        <td>{{ livro.idioma }}</td>
+                        <td>{{ livro.num_copias_disponiveis }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     {% else %}
-    <p>Nenhum livro encontrado com os filtros aplicados.</p>
+        <p>Nenhum livro encontrado com os filtros aplicados.</p>
     {% endif %}
-
 </div>
 {% endblock %}

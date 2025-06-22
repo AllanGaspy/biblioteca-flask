@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session, abort, send_file
-from routes.auth import login_required  # importando o decorator
+from routes.auth import login_required  
 import db
 import datetime
 import pandas as pd

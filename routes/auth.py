@@ -1,5 +1,3 @@
-# routes/auth.py
-
 from flask import Blueprint, render_template, request, redirect, session, url_for, flash
 import db
 from functools import wraps

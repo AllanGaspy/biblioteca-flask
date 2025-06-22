@@ -1,6 +1,0 @@
-Flask==2.3.3
-Flask-MySQL==1.5.2
-Flask-WTF==1.1.1
-mysql-connector-python==8.3.0
-pandas==2.3.0
-xlwings

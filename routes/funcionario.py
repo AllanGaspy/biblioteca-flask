@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, session
-from routes.auth import login_required  # importando o decorator
+from routes.auth import login_required
 import db
 
 funcionario_bp = Blueprint('funcionario', __name__, url_prefix='/funcionario')

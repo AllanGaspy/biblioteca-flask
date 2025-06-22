@@ -3,20 +3,17 @@
 <div class="container mt-4">
   <h2>Registrar Empréstimo</h2>
 
-
   <form method="POST" id="form-cadastrar-emprestimo" novalidate>
     <div class="mb-3">
       <label for="data_retirada" class="form-label">Data de Retirada</label>
       <input type="date" name="data_retirada" id="data_retirada" class="form-control" required
              value="{{ form_data.data_retirada if form_data else '' }}">
     </div>
-
     <div class="mb-3">
       <label for="data_prevista" class="form-label">Data Prevista de Devolução</label>
       <input type="date" name="data_prevista_devolucao" id="data_prevista" class="form-control" required
              value="{{ form_data.data_prevista_devolucao if form_data else '' }}">
     </div>
-
     <div class="mb-3">
       <label for="usuario_input" class="form-label">Usuário</label>
       <input list="listaUsuarios" id="usuario_input" class="form-control" placeholder="Digite o nome do usuário" required autocomplete="off"
@@ -28,7 +25,6 @@
       </datalist>
       <input type="hidden" name="id_usuario" id="id_usuario" value="{{ form_data.id_usuario if form_data else '' }}">
     </div>
-
     <div class="mb-3">
       <label for="livro_input" class="form-label">Livro</label>
       <input list="listaLivros" id="livro_input" class="form-control" placeholder="Digite o título do livro" required autocomplete="off"
@@ -43,7 +39,6 @@
         📚 Cópias disponíveis: <span id="copias_text">Selecione um livro</span>
       </small>
     </div>
-
     <button type="submit" class="btn btn-success">Salvar</button>
     <a href="{{ url_for('emprestimo.listar') }}" class="btn btn-secondary">Cancelar</a>
   </form>

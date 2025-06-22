@@ -24,8 +24,8 @@
 
     <div class="col-md-6 d-flex">
       <button type="submit" class="btn btn-primary me-2">🔍 Buscar</button>
-      <a href="{{ url_for('livros.listar') }}" class="btn btn-secondary me-2">❌ Limpar</a>
-      <a href="{{ url_for('livros.cadastrar') }}" class="btn btn-success me-2">➕ Novo Livro</a>
+      <a href="{{ url_for('livros.listar') }}" class="btn btn-danger me-2">❌ Limpar</a>
+      <a href="{{ url_for('livros.cadastrar') }}" class="btn btn-outline-success me-2">➕ Novo Livro</a>
       <a href="{{ url_for('livros.exportar_excel', titulo=filtro_titulo, categoria=filtro_categoria, editora=filtro_editora) }}" class="btn btn-success">⬇️ Exportar para Excel</a>
     </div>
 

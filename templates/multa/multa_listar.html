@@ -17,29 +17,17 @@
         </div>
         <div class="col-md-6 d-flex">
             <button type="submit" class="btn btn-primary me-2">🔍 Buscar</button>
-            <a href="{{ url_for('multa.listar') }}" class="btn btn-secondary me-2">❌ Limpar</a>
+            <a href="{{ url_for('multa.listar') }}" class="btn btn-danger me-2">❌ Limpar</a>
             <a href="{{ url_for('multa.gerar_multas') }}" class="btn btn-warning me-2">Gerar Multas</a>
             <a href="{{ url_for('multa.exportar_excel') }}" class="btn btn-success">⬇️ Exportar para Excel</a>
         </div>
     </form>
 
-    <!-- Mensagens Flash
-    {% with messages = get_flashed_messages(with_categories=true) %}
-      {% if messages %}
-        {% for category, message in messages %}
-          <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
-            {{ message }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-          </div>
-        {% endfor %}
-      {% endif %}
-    {% endwith %} -->
-
     <!-- Tabela de Multas -->
     <table class="table table-bordered">
         <thead>
             <tr>
-                <th>#</th>
+                <th>ID</th>
                 <th>Usuário</th>
                 <th>Livro</th>
                 <th>Valor</th>

@@ -1,5 +1,5 @@
 from flask import Blueprint, session, render_template, redirect, url_for
-import db  # seu módulo para conexão com o banco
+import db
 
 home_bp = Blueprint("home", __name__)
 

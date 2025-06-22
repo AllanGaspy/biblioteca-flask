@@ -3,37 +3,38 @@
 <div class="container mt-4">
     <a href="{{ url_for('usuario.dashboard') }}" class="btn btn-secondary mt-3">Voltar</a>
     <h2>Minhas Reservas</h2>
+
     {% if reservas %}
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th>Livro</th>
-                <th>Categoria</th>
-                <th>Data da Reserva</th>
-                <th>Posição na fila</th>
-                <th>Ações</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for reserva in reservas %}
-            <tr>
-                <td>{{ reserva.titulo }}</td>
-                <td>{{ reserva.categoria }}</td>
-                <td>{{ reserva.data_reserva.strftime('%d/%m/%Y') }}</td>
-                <td>{{ reserva.ordem_fila }}</td>
-                <td>
-                    <form method="POST"
-                        action="{{ url_for('usuario.cancelar_reserva', id_reserva=reserva.id_reserva) }}"
-                        onsubmit="return confirm('Deseja realmente cancelar esta reserva?');">
-                        <button type="submit" class="btn btn-danger btn-sm">Cancelar</button>
-                    </form>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Livro</th>
+                    <th>Categoria</th>
+                    <th>Data da Reserva</th>
+                    <th>Posição na fila</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for reserva in reservas %}
+                <tr>
+                    <td>{{ reserva.titulo }}</td>
+                    <td>{{ reserva.categoria }}</td>
+                    <td>{{ reserva.data_reserva.strftime('%d/%m/%Y') }}</td>
+                    <td>{{ reserva.ordem_fila }}</td>
+                    <td>
+                        <form method="POST"
+                            action="{{ url_for('usuario.cancelar_reserva', id_reserva=reserva.id_reserva) }}"
+                            onsubmit="return confirm('Deseja realmente cancelar esta reserva?');">
+                            <button type="submit" class="btn btn-danger btn-sm">Cancelar</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     {% else %}
-    <p>Você não possui reservas no momento.</p>
+        <p>Você não possui reservas no momento.</p>
     {% endif %}
 </div>
 {% endblock %}

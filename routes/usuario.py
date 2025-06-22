@@ -284,7 +284,6 @@ def meus_emprestimos():
     ]
 
     # Filtrar por status: precisaremos montar o filtro dinamicamente
-    # Usamos HAVING para filtrar após cálculo de status (ou pode filtrar no Python, mas assim é mais eficiente)
     if filtro_status:
         query += """
           AND (
@@ -314,12 +313,6 @@ def meus_emprestimos():
     )
 
 # --- Multas do usuário logado ---
-from datetime import datetime
-
-from datetime import datetime
-
-from datetime import datetime
-from flask import request
 
 @usuario_bp.route('/multas')
 @login_required(perfis=['aluno', 'professor'])

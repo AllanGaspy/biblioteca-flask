@@ -10,45 +10,24 @@
   <form method="GET" class="row g-3 mb-3 align-items-center" role="search" aria-label="Filtros de empréstimos">
 
     <div class="col-md-2">
-      <input
-        type="search"
-        name="filtro_usuario"
-        class="form-control"
-        placeholder="Filtrar por usuário"
-        value="{{ filtro_usuario or '' }}"
-        aria-label="Filtrar por usuário"
-        autocomplete="off"
-      >
+      <input type="search" name="filtro_usuario" class="form-control" placeholder="Filtrar por usuário"
+        value="{{ filtro_usuario or '' }}" aria-label="Filtrar por usuário" autocomplete="off">
     </div>
 
     <div class="col-md-2">
-      <input
-        type="search"
-        name="filtro_livro"
-        class="form-control"
-        placeholder="Filtrar por livro"
-        value="{{ filtro_livro or '' }}"
-        aria-label="Filtrar por livro"
-        autocomplete="off"
-      >
+      <input type="search" name="filtro_livro" class="form-control" placeholder="Filtrar por livro"
+        value="{{ filtro_livro or '' }}" aria-label="Filtrar por livro" autocomplete="off">
     </div>
 
     <div class="col-md-2">
-      <input
-        type="search"
-        name="filtro_categoria"
-        class="form-control"
-        placeholder="Filtrar por categoria"
-        value="{{ filtro_categoria or '' }}"
-        aria-label="Filtrar por categoria"
-        autocomplete="off"
-      >
+      <input type="search" name="filtro_categoria" class="form-control" placeholder="Filtrar por categoria"
+        value="{{ filtro_categoria or '' }}" aria-label="Filtrar por categoria" autocomplete="off">
     </div>
 
     <div class="col-md-6 d-flex flex-wrap gap-2">
       <button type="submit" class="btn btn-primary me-2">🔍 Buscar</button>
-      <a href="{{ url_for('emprestimo.listar') }}" class="btn btn-secondary me-2">❌ Limpar</a>
-      <a href="{{ url_for('emprestimo.cadastrar') }}" class="btn btn-success me-2">➕ Novo Empréstimo</a>
+      <a href="{{ url_for('emprestimo.listar') }}" class="btn btn-danger me-2">❌ Limpar</a>
+      <a href="{{ url_for('emprestimo.cadastrar') }}" class="btn btn-outline-success me-2">➕ Novo Empréstimo</a>
       <a href="{{ url_for('emprestimo.exportar_excel') }}" class="btn btn-success">⬇️ Exportar para Excel</a>
     </div>
 
@@ -81,10 +60,13 @@
           <td>{{ e.data_prevista_devolucao }}</td>
           <td>{{ e.data_real_devolucao or '-' }}</td>
           <td>
-            <a href="{{ url_for('emprestimo.editar', id=e.id_emprestimo) }}" class="btn btn-sm btn-warning">✏️ Editar</a>
-            <form action="{{ url_for('emprestimo.deletar', id=e.id_emprestimo) }}" method="POST" style="display:inline-block;">
-              <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Tem certeza que deseja deletar?')">Deletar</button>
-            </form>
+            <div class="d-flex gap-2">
+              <a href="{{ url_for('emprestimo.editar', id=e.id_emprestimo) }}" class="btn btn-sm btn-warning">✏️Editar</a>
+              <form action="{{ url_for('emprestimo.deletar', id=e.id_emprestimo) }}" method="POST">
+                <button type="submit" class="btn btn-sm btn-danger"
+                  onclick="return confirm('Tem certeza que deseja deletar?')">Deletar</button>
+              </form>
+            </div>
           </td>
         </tr>
         {% else %}
